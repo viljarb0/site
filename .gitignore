@@ -1,11 +1,8 @@
 .vscode/*
 .vscode/**/*
-gitea
 gitea/*
 gitea/**
-html
 html/*
 html/**
-logs
 logs/*
 logs/**

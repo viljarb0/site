@@ -1,0 +1,73 @@
+
+networks:
+  default:
+    external: false
+
+services:
+  #certbot:
+  #  profiles:
+  #    - certbot   # Only run via: docker compose --profile certbot run --rm certbot
+  #  network_mode: host
+  #  build:
+  #    context: .
+  #    dockerfile: Dockerfile.certbot
+  #  environment:
+  #    - DOMAIN=${DOMAIN}
+  #    - EMAIL=${EMAIL}
+  #    - GITEA_DOMAIN=${GITEA_DOMAIN}
+  #  volumes:
+  #    - certs:/etc/letsencrypt
+  #  ports:
+  #    - "80:80"
+  #  restart: "no"
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+      args:
+        - DOMAIN=${DOMAIN}
+        - EMAIL=${EMAIL}
+        - GITEA_DOMAIN=${GITEA_DOMAIN}
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+      - GITEA_DOMAIN=${GITEA_DOMAIN}
+    networks:
+      - default
+    volumes:
+      - certs:/etc/letsencrypt
+      - ./html:/usr/share/nginx/html
+      - ./logs:/var/log/nginx/visitors
+    ports:
+      - "80:80"
+      - "443:443"
+
+  gitea:
+    image: docker.io/gitea/gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - ROOT_URL=${GITEA_ROOT_URL}
+      - DOMAIN=${GITEA_DOMAIN}
+      - SSH_DOMAIN=${GITEA_DOMAIN}
+      - SSH_PORT=2222
+      - GITEA__log__ROOT_PATH=/var/log/gitea
+      - GITEA__log__MODE=file
+    restart: always
+    networks:
+      - default
+    volumes:
+      - ./gitea:/data
+      - ./logs:/var/log/gitea
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "4000:3000"
+      - "2222:2222"
+
+
+
+
+volumes:
+  certs:

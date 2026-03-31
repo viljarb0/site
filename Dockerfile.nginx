@@ -1,0 +1,27 @@
+FROM nginx:alpine
+
+ARG DOMAIN
+ARG EMAIL
+ARG GITEA_DOMAIN
+ENV DOMAIN=${DOMAIN}
+ENV EMAIL=${EMAIL}
+ENV GITEA_DOMAIN=${GITEA_DOMAIN}
+
+# Install gettext (for envsubst) and openssl
+RUN apk add --no-cache gettext openssl
+
+# Copy nginx config templates (generated at runtime with envsubst)
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
+COPY nginx-gitea.conf.template /etc/nginx/nginx-gitea.conf.template
+
+# Copy HTML content
+COPY html /usr/share/nginx/html
+
+# Copy and set up entrypoint
+COPY entrypoint-nginx.sh /entrypoint-nginx.sh
+RUN chmod +x /entrypoint-nginx.sh
+
+EXPOSE 80 443
+
+ENTRYPOINT ["/entrypoint-nginx.sh"]
+CMD ["nginx", "-g", "daemon off;"]

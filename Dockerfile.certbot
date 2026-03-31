@@ -1,0 +1,6 @@
+FROM certbot/certbot
+
+COPY entrypoint-certbot.sh /entrypoint-certbot.sh
+RUN chmod +x /entrypoint-certbot.sh
+
+ENTRYPOINT ["/entrypoint-certbot.sh"]

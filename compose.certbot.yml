@@ -1,0 +1,22 @@
+services:
+  certbot:
+    profiles:
+      - certbot   # Only run via: docker compose --profile certbot run --rm certbot
+    network_mode: host
+    build:
+      context: .
+      dockerfile: Dockerfile.certbot
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+      - GITEA_DOMAIN=${GITEA_DOMAIN}
+    volumes:
+      - certs:/etc/letsencrypt
+    ports:
+      - "80:80"
+    restart: "no"
+
+
+
+volumes:
+  certs:

@@ -2,7 +2,7 @@
 set -e
 
 if [ -n "$DOMAIN" ] && [ -n "$EMAIL" ]; then
-    # production: get Let's Encrypt cert
+    # for production: get Let's Encrypt cert
     if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
         certbot certonly --standalone \
             -d "$DOMAIN" \
@@ -13,7 +13,7 @@ if [ -n "$DOMAIN" ] && [ -n "$EMAIL" ]; then
     export SSL_CERTIFICATE="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
     export SSL_CERTIFICATE_KEY="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
 else
-    # development: self-signed cert
+    # for development: self-signed cert
     echo "Development mode: using self-signed certificate"
     mkdir -p /etc/nginx/certs
     if [ ! -f /etc/nginx/certs/cert.pem ]; then

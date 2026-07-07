@@ -1,11 +1,16 @@
 .vscode/*
 .vscode/**/*
-gitea
+
+searx/core-config/settings.yml
 gitea/*
-gitea/**
-html
-html/*
-html/**
-logs
-logs/*
-logs/**
+gitea/** */
+web/html/*
+web/html/** */
+proxy/data/*
+proxy/data/** */
+proxy/config/*
+proxy/config/** */
+searx/core-data/*
+searx/core-data/** */
+searx/valkey-data/*
+searx/valkey-data/** */

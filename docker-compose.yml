@@ -1,40 +1,58 @@
-
-networks:
-  default:
-    external: false
-
 services:
 
-  nginx:
-    build:
-      context: .
-      dockerfile: Dockerfile.nginx
-      args:
-        - DOMAIN=${DOMAIN}
-        - EMAIL=${EMAIL}
-        - GITEA_DOMAIN=${GITEA_DOMAIN}
-    environment:
-      - DOMAIN=${DOMAIN}
-      - EMAIL=${EMAIL}
-      - GITEA_DOMAIN=${GITEA_DOMAIN}
-    networks:
-      - default
+  web:
+    image: caddy:latest
+    restart: always
     volumes:
-      - certs:/etc/letsencrypt
-      - ./html:/usr/share/nginx/html
-      - ./logs:/var/log/nginx/visitors
+      - ./web/html:/srv/html
+      - ./web/Caddyfile:/etc/caddy/Caddyfile
+
+  proxy:
+    image: caddy:latest
+    restart: always
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile
+      - ./proxy/data:/data
+      - ./proxy/config:/config
+    depends_on:
+      - web
+      - searxng-core
+      - searxng-valkey
+      - gitea
+
+  searxng-core:
+    container_name: searxng-core
+    image: docker.io/searxng/searxng:${SEARXNG_VERSION:-latest}
+    restart: always
+    env_file: ./searx/.env
+    networks:
+      - default
+    volumes:
+      - ./searx/core-config/:/etc/searxng/:Z
+      - ./searx/core-data:/var/cache/searxng/
+      - ./searx/limiter.toml:/etc/searxng/limiter.toml:Z
+
+  searxng-valkey:
+    container_name: searxng-valkey
+    image: docker.io/valkey/valkey:9-alpine
+    command: valkey-server --save 30 1 --loglevel warning
+    restart: always
+    networks:
+      - default
+    volumes:
+      - ./searx/valkey-data:/data/
 
   gitea:
     image: docker.io/gitea/gitea
     environment:
       - USER_UID=1000
       - USER_GID=1000
-      - ROOT_URL=${GITEA_ROOT_URL}
-      - DOMAIN=${GITEA_DOMAIN}
-      - SSH_DOMAIN=${GITEA_DOMAIN}
+      - ROOT_URL=https://gitea.viljarb.online
+      - DOMAIN=gitea.viljarb.online
+      - SSH_DOMAIN=gitea.viljarb.online
       - SSH_PORT=2222
       - GITEA__log__ROOT_PATH=/var/log/gitea
       - GITEA__log__MODE=file
@@ -43,15 +61,8 @@ services:
       - default
     volumes:
       - ./gitea:/data
-      - ./logs:/var/log/gitea
+      - ./gitea/logs:/var/log/gitea
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - "4000:3000"
       - "2222:2222"
-
-
-
-
-volumes:
-  certs:
